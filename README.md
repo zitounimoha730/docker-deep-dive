@@ -440,8 +440,6 @@ IPVLAN operates in two modes:
 ### 1.5. Service Discovery
 Working on docker cluster of 3 nodes <br/>
 
-### Service Discovery
-
 Docker Swarm provides **built-in service discovery** using an internal DNS server.
 Each service is automatically assigned a **DNS name** that resolves to the
 IP address of one or more service tasks.
