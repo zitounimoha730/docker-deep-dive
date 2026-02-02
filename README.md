@@ -568,7 +568,7 @@ M1:# docker service create --name app-svc --replicas 2 --network app-net --publi
 
 When accessing the application from outside the cluster using:
 
-<docker-node-public-ip>:5000
+[docker-node-public-ip]:5000
 
 the request can be sent to **any Swarm node**, even if the service
 task is not running on that node.
