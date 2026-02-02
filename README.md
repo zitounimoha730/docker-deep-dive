@@ -13,6 +13,8 @@
         - [1.2.2. Inspect default overlay ingress network](#122-create-new-overlay-network)
         - [1.2.3. Create new overlay network "ps-overlay"](#123-create-new-overlay-network-ps-overlay)
         - [1.2.4. Create new overlay attachable network](#124-create-new-overlay-attachable-network)
+    - [1.3. MACVLAN](#13-macvlan)
+    - [1.4. IPVLAN](#14-ipvlan)
 ## 1. Networking
 * On the same machine, docker containers communicate through local docker socket (without going through internet)
 * Display available network drivers
