@@ -432,3 +432,164 @@ It requires a Linux host with **kernel 4.2+** and is typically used when:
 IPVLAN operates in two modes:
 - **L2 mode**: containers behave like hosts on the same subnet
 - **L3 mode**: routing is required between the host and containers
+
+### 1.5. Service Discovery
+Working on docker cluster of 3 nodes <br/>
+
+### Service Discovery
+
+Docker Swarm provides **built-in service discovery** using an internal DNS server.
+Each service is automatically assigned a **DNS name** that resolves to the
+IP address of one or more service tasks.
+
+Service discovery works **only inside user-defined overlay networks**.
+
+Key points:
+* Services can reach each other using the **service name**, not IP addresses
+* DNS resolution is **dynamic** and updates automatically when tasks scale or move
+* Load balancing is performed at the **service level** (VIP mode by default)
+* No external service registry (Consul, etcd) is required
+
+When a service is created, Docker assigns it a Virtual IP (VIP).
+Requests sent to the service name are resolved to this VIP.
+The Swarm internal load balancer then distributes traffic
+to available service tasks.
+
+* Service Discovery modes (important distinction)
+
+Docker Swarm supports two service discovery modes:
+
+1. VIP (default)
+   - A single virtual IP per service
+   - Built-in load balancing
+
+2. DNSRR (DNS Round Robin)
+   - DNS returns multiple task IPs
+   - Load balancing handled by the client
+```sh
+$ docker service create \
+  --name web \
+  --network app-net \
+  --endpoint-mode dnsrr \
+  nginx
+```
+
+* Not provided by the ingress network
+* Not dependent on published ports
+* Not visible outside the Swarm cluster
+
+#### 1.5.1 Create a service and test connectivity and load balancing
+```sh
+M1:# docker network create --driver overlay --attachable marvel
+
+M1:# docker service create --name shield --network marvel --replicas 3 nigelpoulton/k8sbook:shield-01
+
+M1:# docker service ls
+
+M1:# docker network inspect 
+# => container Name shield.2.<ID1>
+M2:# docker network inspect 
+# => container Name shield.2.<ID2>
+
+M1:# docker attach shield.2.<ID1>
+/ # ping -c 4 shield.2.<ID2>
+success
+^ctrl PQ
+
+M1:# docker container run -dit --name zephyr-one --network marvel alpine ash
+
+M1:# docker attach zephyr-one 
+/ # ping -c 4 shield.2.<ID2>
+success 
+
+# ping service directly
+/ # ping -c 4 shield
+success 
+
+/ # ping -c 4 shield
+/ # ping -c 4 shield
+# At each time we see different address responds
+# => load balancing
+^ctrl PQ
+
+M1:# docker network create --driver overlay --attachable theframework 
+
+M1:# docker service create --name hydra --network theframework --replicas 3 nigelpoulton/k8sbook:hydra-ingress
+
+M1:# docker attach zephyr-one 
+/ # ping -c 4 hydra
+bad address 'hydra' 
+```
+#### 1.5.2. Ingress Networking
+Service connectivity works because Docker Swarm automatically creates
+an **ingress overlay network** when Swarm mode is initialized.
+This network enables external access and internal load balancing
+for services that publish ports.
+
+* We should **not deploy application services directly on the default ingress network**.
+* The ingress network is used for **service routing and load balancing**, not service discovery.
+* Behind the scenes, Docker uses two main components on each node:
+  - **docker_gwbridge**: connects the ingress network to the host network
+  - **ingress-sbox** (sandbox): handles packet processing and routing for ingress traffic
+
+When traffic arrives from outside the cluster, it enters through the
+docker_gwbridge, is processed by the ingress sandbox, forwarded to the
+ingress overlay network, and finally routed to the service task
+attached to the application’s custom overlay network.
+
+```sh
+M1:# docker network ls
+...
+docker_gwbridge bridge  local
+ingress         overlay swarm
+
+M1:# docker network inspect ingress
+...
+Containers:
+  "ingress-sbox": .... "IPv4Address": "10.0.0.2/24"
+
+M1:# docker network inspect docker_gwbridge
+...
+Containers:
+  "ingress-sbox": .... "IPv4Address": "172.18.0.2/16"
+
+# => ingress-sbox:
+#     10.0.0.2 (ingress overlay)
+#     172.18.0.02 (docker_gwbridge)
+```
+
+```sh
+M1:# docker network create --driver overlay --attachable -o encrypted app-net
+
+M1:# docker service create --name app-svc --replicas 2 --network app-net --publish published=5000,target=8080 nigelpoulton/k8sbook:shield-01
+```
+
+When accessing the application from outside the cluster using:
+
+<docker-node-public-ip>:5000
+
+the request can be sent to **any Swarm node**, even if the service
+task is not running on that node.
+
+Docker Swarm’s **internal load balancer** (routing mesh) forwards
+each request to one of the available service replicas.
+As a result, successive requests may be handled by **different containers**.
+
+#### 1.5.3. External Load Balancer
+
+In production environments, it is common to place an **external load balancer**
+(e.g. AWS ELB / ALB, HAProxy, NGINX, F5) in front of the Swarm cluster.
+
+The external load balancer:
+* Targets all Swarm nodes
+* Forwards traffic to the published application port (5000)
+* Distributes traffic across nodes
+
+Docker Swarm then performs **internal load balancing**
+to route requests to the appropriate service replicas.
+
+* The external load balancer balances traffic across nodes,
+while Docker Swarm balances traffic across service replicas.
+
+* The routing mesh allows a published service port to be reachable
+on every node, regardless of where the containers are running.
