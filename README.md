@@ -15,7 +15,12 @@
         - [1.2.4. Create new overlay attachable network](#124-create-new-overlay-attachable-network)
 ## 1. Networking
 * On the same machine, docker containers communicate through local docker socket (without going through internet)
+* Display available network drivers
 
+```sh
+$ docker info --format '{{.Plugins.Network}}'
+[bridge host ipvlan macvlan null overlay]
+```
 ### 1.1. Single Host Bridge Network
 
 #### 1.1.1. Attach containes to default bridge network
@@ -392,3 +397,36 @@ M2: docker attach ps-pinger
 / # ping -c 4 willpass
 success
 ```
+
+### 1.3. MACVLAN
+MACVLAN allows Docker containers to appear as **physical devices on the local network**.
+Each container gets its own **MAC address** and IP from the LAN, and communicates directly
+with the external network without NAT.
+
+It requires a Linux host with **kernel 3.9+ (4.x+ recommended)** and a network interface
+configured in **promiscuous mode**, since multiple MAC addresses share the same physical NIC.
+
+MACVLAN is typically used for:
+- Legacy applications that require direct L2 access
+- Network monitoring tools
+- Appliances that must be discoverable on the LAN
+- Environments where port mapping or NAT is not acceptable
+
+⚠️ Limitation: containers cannot communicate with the Docker host by default.
+
+### 1.4. IPVLAN
+
+IPVLAN is similar to MACVLAN but uses a **single MAC address** shared by the host
+while assigning **multiple IP addresses** to containers.
+
+Unlike MACVLAN, IPVLAN does **not require promiscuous mode**, making it easier to
+deploy on networks with strict security policies or switch limitations.
+
+It requires a Linux host with **kernel 4.2+** and is typically used when:
+- The network does not allow multiple MAC addresses per port
+- You need better scalability than MACVLAN
+- You want containers to integrate into the LAN at Layer 3
+
+IPVLAN operates in two modes:
+- **L2 mode**: containers behave like hosts on the same subnet
+- **L3 mode**: routing is required between the host and containers
