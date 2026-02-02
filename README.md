@@ -25,10 +25,7 @@ $ docker network ls
 NETWORK ID     NAME                            DRIVER    SCOPE
 03604b758f46   bridge                          bridge    local
 2a5eabeb0cd9   host                            host      local
-df3dc5566970   kafka-cluster-kraft_kafka-net   bridge    local
-08470d664aa9   kafka-net                       bridge    local
 48906b56089c   none                            null      local
-b4b20a0526fb   scriberr_default                bridge    local
 
 $ docker run -dit --name ctr1 alpine ash
 $ docker run -dit --name ctr2 alpine ash
