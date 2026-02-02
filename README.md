@@ -4,7 +4,7 @@
 
 ### 1. Single Host Bridge Network
 
-```
+```sh
 $ docker network ls
 NETWORK ID     NAME                            DRIVER    SCOPE
 03604b758f46   bridge                          bridge    local
@@ -76,11 +76,10 @@ PING app.pluralsight.com (104.17.192.111): 56 data bytes
 64 bytes from 104.17.192.111: seq=2 ttl=63 time=18.338 ms
 64 bytes from 104.17.192.111: seq=3 ttl=63 time=14.193 ms
 
-/ # exit
 ```
 
 Create our own dridge network ps-bridge
-```
+```sh
 $ docker network create --driver bridge ps-bridge
 
 $ docker network inspect ps-bridge
@@ -240,7 +239,7 @@ PING 172.17.0.3 (172.17.0.3): 56 data bytes
 ```
 
 Connect existing container to our bridge network
-```
+```sh
 $ docker network connect ps-bridge ctr1
 
 # => Now the container ctr1 is existing into the both bridge networks default bridge and ps-bridge
@@ -279,7 +278,7 @@ round-trip min/avg/max = 0.061/0.123/0.264 ms
 ```
 
 Understand port mapping
-```
+```sh
 $ docker run -dit --name web --network ps-bridge --publish 5000:8080 nigelpoulton/pluralsight-docker-ci
 
 # => we created a container of image nigelpoulton/pluralsight-docker-ci that maps the host port 5000 to container port 8080
@@ -291,7 +290,7 @@ We will work with 3 nodes (vms). Each node has docker installed on it.
 
 #### 2.1. Create docker swarm cluster of 3 nodes
 Cluster of 3 nodes (M1, M2, M3):
-```
+```sh
 M1:# docker node ls
 [to do]
 M1:# docker network ls
@@ -318,7 +317,7 @@ M1:# docker network inspect ingress
 
 #### 2.2. create new overlay network
 Inspect default overlay ingress network created by swarm
-```
+```sh
 M1:# docker network ls
 [to do]
 
@@ -334,7 +333,7 @@ M1:# docker network inspect ingress
 
 Create new overlay network "ps-overlay"
 
-```
+```sh
 M1:# docker network create --driver overlay --subnet=10.11.0.0/16 --gateway=10.11.0.2 --opt encrypted ps-overlay
 
 M1:# docker network ls
@@ -365,7 +364,7 @@ M1:# docker exec -it ps-svc.1<ID1>
 
 #### 2.3. create new overlay attachable network
 The bridge newtork that we created previously ps-overlay is not attacgable from manual created containers
-```
+```sh
 M1:# docker container run -dit --name willfail --network ps-overlay alpine ash
 [to do]
 Error response from daemon: Could not attach to network ps-overlay
