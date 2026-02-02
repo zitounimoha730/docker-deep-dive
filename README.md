@@ -285,3 +285,98 @@ $ docker run -dit --name web --network ps-bridge --publish 5000:8080 nigelpoulto
 # => we created a container of image nigelpoulton/pluralsight-docker-ci that maps the host port 5000 to container port 8080
 # => to reach this web app we should use http://localhost:5000
 ```
+
+### 2. Multi-host Overlay Networks
+We will work with 3 nodes (vms). Each node has docker installed on it.
+
+#### 2.1. Create docker swarm cluster of 3 nodes
+Cluster of 3 nodes (M1, M2, M3):
+```
+M1:# docker node ls
+[to do]
+M1:# docker network ls
+[to do]
+M1:# docker swarm init --advertise-addr=192.168.193.121
+[to do]
+M2:# docker swarm join --token [token]
+M3:# docker swarm join --token [token]
+
+M1:# docker node ls
+[to do]
+M1:# docker network ls
+[to do]
+
+M1:# docker network inspect ingress
+...
+"Ingress": true,
+"Peers": [
+    { "Name": ...., "IP": "..."},
+    { "Name": ...., "IP": "..."},
+    { "Name": ...., "IP": "..."},
+]
+```
+
+#### 2.2. create new overlay network
+Inspect default overlay ingress network created by swarm
+```
+M1:# docker network ls
+[to do]
+
+M1:# docker network inspect ingress
+...
+"Ingress": true,
+"Peers": [
+    { "Name": ...., "IP": "..."},
+    { "Name": ...., "IP": "..."},
+    { "Name": ...., "IP": "..."},
+]
+```
+
+Create new overlay network "ps-overlay"
+
+```
+M1:# docker network create --driver overlay --subnet=10.11.0.0/16 --gateway=10.11.0.2 --opt encrypted ps-overlay
+
+M1:# docker network ls
+[to do]
+M2:# docker network ls
+[to do]
+not yet visible on node M2 and M3 because overlay networks are lasy. We need to attach to them containers inside the node where to be visible.
+
+M1:# docker service create --name ps-svc --replicas=3 --network ps-overlay alpine sleep infinity
+
+M2:# docker network ls
+[to do]
+
+M1:# docker service ps ps-svc
+[to do]
+
+M2:# docker network inspect ps-overlay
+[to do]
+"Containers": {
+    .....
+    "Name": "ps-svc.1<ID2>"
+}
+
+# We use docker exec because we can not attach to sleepy process
+M1:# docker exec -it ps-svc.1<ID1>
+/ # ping -c 4 ps-svc.1<ID2>
+```
+
+#### 2.3. create new overlay attachable network
+The bridge newtork that we created previously ps-overlay is not attacgable from manual created containers
+```
+M1:# docker container run -dit --name willfail --network ps-overlay alpine ash
+[to do]
+Error response from daemon: Could not attach to network ps-overlay
+
+M1:# docker network create --driver=overlay --attachable ps-attacher
+
+M1:# docker container run -dit --name willpass --network ps-attacher alpine ash
+
+M2:# docker container run -dit --name ps-pinger --network ps-attacher alpine ash 
+
+M2: docker attach ps-pinger
+/ # ping -c 4 willpass
+success
+```
