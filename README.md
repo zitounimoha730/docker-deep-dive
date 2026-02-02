@@ -15,6 +15,10 @@
         - [1.2.4. Create new overlay attachable network](#124-create-new-overlay-attachable-network)
     - [1.3. MACVLAN](#13-macvlan)
     - [1.4. IPVLAN](#14-ipvlan)
+    - [1.5. Service Discovery](#15-service-discovery)
+        - [1.5.1. Create a service and test connectivity and load balancing](#151-create-a-service-and-test-connectivity-and-load-balancing)
+        - [1.5.2. Ingress Networking](#152-ingress-networking)
+        - [1.5.3. External Load Balancer](#153-external-load-balancer)
 ## 1. Networking
 * On the same machine, docker containers communicate through local docker socket (without going through internet)
 * Display available network drivers
