@@ -1,4 +1,18 @@
 # Docker Deep Dive
+
+## Table of Contents
+
+1. [Networking](#1-networking)
+    - [1.1. Single Host Bridge Network](#11-single-host-bridge-network)
+        - [1.1.1. Attach containers to default bridge network](#111-attach-containes-to-default-bridge-network)
+        - [1.1.2. Create our own bridge network (ps-bridge)](#112-create-our-own-dridge-network-ps-bridge)
+        - [1.1.3. Connect existing container to our bridge network](#113-connect-existing-container-to-our-bridge-network)
+        - [1.1.4. Understand port mapping](#114-understand-port-mapping)
+    - [1.2. Multi-host Overlay Networks](#12-multi-host-overlay-networks)
+        - [1.2.1. Create docker swarm cluster of 3 nodes](#121-create-docker-swarm-cluster-of-3-nodes)
+        - [1.2.2. Inspect default overlay ingress network](#122-create-new-overlay-network)
+        - [1.2.3. Create new overlay network "ps-overlay"](#123-create-new-overlay-network-ps-overlay)
+        - [1.2.4. Create new overlay attachable network](#124-create-new-overlay-attachable-network)
 ## 1. Networking
 * On the same machine, docker containers communicate through local docker socket (without going through internet)
 
