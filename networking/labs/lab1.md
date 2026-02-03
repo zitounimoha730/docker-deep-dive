@@ -1,6 +1,6 @@
 # Lab 1: Manage Docker Networking
 
-OBJECTIVE 1
+## OBJECTIVE 1
 Defining and Testing a Docker Bridge Network
 You'll identify your current Docker network environment, create a new network, and test connectivity between networks.
 
@@ -85,7 +85,7 @@ sudo docker exec -it con3 ping con2
 
 You'll get a ping: bad address 'con2' response.
 
-OBJECTIVE 2
+## OBJECTIVE 2
 Building and Deploying a Docker Swarm Across an Overlay Network
 Learn to deploy Docker Swarms into appropriately segmented networks.
 
@@ -143,7 +143,7 @@ sudo docker network inspect my_overlay_network
 The output will end with the two node's IPs. You've got a Docker Swarm successfully running inside a custom overlay network. In the next challenge, you'll test connectivity to ensure it matches your exact needs.
 
 
-OBJECTIVE 3
+## OBJECTIVE 3
 Testing a Docker Network Environment for Segmentation
 Working with containers and services, you'll be able to better understand how and why your overlay network is segmented.
 
